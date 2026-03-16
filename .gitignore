@@ -1,1 +1,5 @@
 .pio
+.cache
+.clangd
+platformio.ini
+compile_commands.json
