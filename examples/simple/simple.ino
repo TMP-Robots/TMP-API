@@ -17,6 +17,12 @@ void setup()
   /* Change the last parameter to true if you want the ESP32 to create its own
    * Access Point instead of connecting to an existing WiFi network */
   robotServer.begin(ssid, password, false); 
+  
+  // If you want to enable OTA updates
+  robotServer.enableOTA();
+  /* can also be enabled later in the code with robotServer.enableOTA() or 
+   * disabled with robotServer.disableOTA() 
+   */
 }
 
 void loop() 

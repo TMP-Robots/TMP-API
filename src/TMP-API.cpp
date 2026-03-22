@@ -18,8 +18,12 @@ void TMP_RobotServer::begin()
   
   _server.onNotFound([this]() { _handleNotFound(); });
 
-  _server.begin();
   _setup_OTA();
+  _OTAEnabled = false;
+
+  ESP_LOGI(TAG, "OTA ready");
+  
+  _server.begin();
   ESP_LOGD(TAG, "Server started successfully");
 }
 
@@ -31,6 +35,43 @@ void TMP_RobotServer::begin(const char* ssid, const char* pass, bool isAP)
     _setupSTA(ssid, pass);
   
   begin();
+}
+
+void TMP_RobotServer::enableOTA() 
+{
+  if (!_OTAEnabled)
+  {
+    _OTAEnabled = true;
+    ArduinoOTA.begin();
+
+    ESP_LOGI(TAG, "OTA enabled");
+  } 
+  else 
+    ESP_LOGW(TAG, "OTA is already enabled");
+
+}
+
+void TMP_RobotServer::disableOTA()
+{
+  if (_OTAEnabled)
+  {
+    _OTAEnabled = false;
+    ArduinoOTA.end();
+    ESP_LOGI(TAG, "OTA disabled");
+  } 
+  else 
+    ESP_LOGW(TAG, "OTA is already disabled");
+
+}
+
+void TMP_RobotServer::update() 
+{ 
+  _server.handleClient(); 
+  
+  if (_OTAEnabled) {
+    ArduinoOTA.handle();
+  }
+
 }
 
 void TMP_RobotServer::_setupAP(const char* ssid, const char* pass)
@@ -101,14 +142,6 @@ void TMP_RobotServer::_setup_OTA()
     }
   });
   ArduinoOTA.setHostname(_hostname);
-  ArduinoOTA.begin();
-  ESP_LOGI(TAG, "OTA ready");
-}
-
-void TMP_RobotServer::update() 
-{ 
-  _server.handleClient(); 
-  ArduinoOTA.handle();
 }
 
 void TMP_RobotServer::_handleRoot()

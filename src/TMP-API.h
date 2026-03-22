@@ -28,12 +28,18 @@ public:
    * If false (default), it will connect to an existing network as a station.
    */
   void begin(const char* ssid, const char* pass, bool isAP = false);
+  
+  void enableOTA();
+
+  void disableOTA();
 
   void update();
 
 private:
   const char* _hostname;
   WebServer _server;
+  
+  bool _OTAEnabled;
 
   void _setupAP(const char* ssid, const char* pass);
   void _setupSTA(const char* ssid, const char* pass);
