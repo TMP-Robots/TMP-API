@@ -2,31 +2,38 @@
 
 static const char* TAG = "TMP_API";
 
-TMP_RobotServer::TMP_RobotServer(int port) 
-  : _server(port) { }
+TMP_RobotServer::TMP_RobotServer() : TMP_RobotServer("TMP-ESP32", 80) {}
+
+TMP_RobotServer::TMP_RobotServer(int port) : TMP_RobotServer("TMP-ESP32", port) {}
+
+TMP_RobotServer::TMP_RobotServer(const char* hostname) : TMP_RobotServer(hostname, 80) {}
+
+TMP_RobotServer::TMP_RobotServer(const char* hostname, int port) 
+  : _server(port), _hostname(hostname) {}
 
 void TMP_RobotServer::begin()
 {
-  _server.on("/", [this]() { handleRoot(); });
-  _server.on("/health", [this]() { handleHealth(); });
+  _server.on("/", [this]() { _handleRoot(); });
+  _server.on("/health", [this]() { _handleHealth(); });
   
-  _server.onNotFound([this]() { handleNotFound(); });
+  _server.onNotFound([this]() { _handleNotFound(); });
 
   _server.begin();
+  _setup_OTA();
   ESP_LOGD(TAG, "Server started successfully");
 }
 
 void TMP_RobotServer::begin(const char* ssid, const char* pass, bool isAP)
 {
   if (isAP) 
-    setupAP(ssid, pass);
+    _setupAP(ssid, pass);
   else
-    setupSTA(ssid, pass);
+    _setupSTA(ssid, pass);
   
   begin();
 }
 
-void TMP_RobotServer::setupAP(const char* ssid, const char* pass)
+void TMP_RobotServer::_setupAP(const char* ssid, const char* pass)
 {
   ESP_LOGD(TAG, "Configuring Access Point...");
   WiFi.mode(WIFI_AP); 
@@ -42,7 +49,7 @@ void TMP_RobotServer::setupAP(const char* ssid, const char* pass)
   }
 }
 
-void TMP_RobotServer::setupSTA(const char* ssid, const char* pass)
+void TMP_RobotServer::_setupSTA(const char* ssid, const char* pass)
 {
   ESP_LOGI(TAG, "Connecting to Station: %s", ssid);
   WiFi.mode(WIFI_STA);
@@ -68,21 +75,55 @@ void TMP_RobotServer::setupSTA(const char* ssid, const char* pass)
   }
 }
 
-void TMP_RobotServer::update() { _server.handleClient(); }
+void TMP_RobotServer::_setup_OTA()
+{
+  ArduinoOTA.onStart([]() {
+    ESP_LOGI(TAG, "Start updating...");
+  });
+  ArduinoOTA.onEnd([]() {
+    ESP_LOGI(TAG, "\nEnd");
+  });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    ESP_LOGI(TAG, "Progress: %u%%", (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    ESP_LOGE(TAG, "Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) {
+      ESP_LOGE(TAG, "Auth Failed");
+    } else if (error == OTA_BEGIN_ERROR) {
+      ESP_LOGE(TAG, "Begin Failed");
+    } else if (error == OTA_CONNECT_ERROR) {
+      ESP_LOGE(TAG, "Connect Failed");
+    } else if (error == OTA_RECEIVE_ERROR) {
+      ESP_LOGE(TAG, "Receive Failed");
+    } else if (error == OTA_END_ERROR) {
+      ESP_LOGE(TAG, "End Failed");
+    }
+  });
+  ArduinoOTA.setHostname(_hostname);
+  ArduinoOTA.begin();
+  ESP_LOGI(TAG, "OTA ready");
+}
 
-void TMP_RobotServer::handleRoot()
+void TMP_RobotServer::update() 
+{ 
+  _server.handleClient(); 
+  ArduinoOTA.handle();
+}
+
+void TMP_RobotServer::_handleRoot()
 {
   _server.send(200, "text/plain", "Hi");
   ESP_LOGD(TAG, "200 - Root accessed");
 }
 
-void TMP_RobotServer::handleHealth()
+void TMP_RobotServer::_handleHealth()
 {
   _server.send(200, "application/json", "{\"status\":\"ok\"}");
   ESP_LOGD(TAG, "200 - Status accessed");
 }
 
-void TMP_RobotServer::handleNotFound()
+void TMP_RobotServer::_handleNotFound()
 {
   _server.send(404, "application/json", "{\"error\":\"not found\"}");
   ESP_LOGD(TAG, "404 - Not Found");

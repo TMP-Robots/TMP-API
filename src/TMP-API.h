@@ -5,10 +5,14 @@
 #include <WebServer.h>
 #include <WiFi.h>
 #include <esp_log.h>
+#include <ArduinoOTA.h>
 
 class TMP_RobotServer {
 public:
-  TMP_RobotServer(int port = 80);
+  TMP_RobotServer();
+  TMP_RobotServer(int port);
+  TMP_RobotServer(const char* hostname);
+  TMP_RobotServer(const char* hostname, int port);
 
   /**
    * @brief Initializes the server without managing the WiFi connection.
@@ -28,13 +32,16 @@ public:
   void update();
 
 private:
+  const char* _hostname;
   WebServer _server;
-  void setupAP(const char* ssid, const char* pass);
-  void setupSTA(const char* ssid, const char* pass);
 
-  void handleRoot();
-  void handleHealth();
-  void handleNotFound();
+  void _setupAP(const char* ssid, const char* pass);
+  void _setupSTA(const char* ssid, const char* pass);
+  void _setup_OTA();
+
+  void _handleRoot();
+  void _handleHealth();
+  void _handleNotFound();
 };
 
 #endif
