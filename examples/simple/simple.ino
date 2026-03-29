@@ -4,7 +4,10 @@
 const char* ssid = "YOUR_WIFI_SSID";
 const char* password = "YOUR_WIFI_PASSWORD";
 
-TMP_RobotServer robotServer(80);
+/* By default, the server will be created with the hostname "TMP-ESP32" and 
+ * listen on port 80. You can customize these parameters by using the 
+ * constructor with arguments */
+TMP_RobotServer robotServer("YOUR_HOSTNAME", 80);
 
 void setup()
 {

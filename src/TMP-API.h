@@ -30,6 +30,7 @@ public:
   void begin(const char* ssid, const char* pass, bool isAP = false);
   
   void enableOTA();
+  void enableOTA(const char* password);
 
   void disableOTA();
 

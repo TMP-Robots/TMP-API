@@ -51,6 +51,12 @@ void TMP_RobotServer::enableOTA()
 
 }
 
+void TMP_RobotServer::enableOTA(const char* password)
+{
+  ArduinoOTA.setPassword(password);
+  enableOTA();
+}
+
 void TMP_RobotServer::disableOTA()
 {
   if (_OTAEnabled)
