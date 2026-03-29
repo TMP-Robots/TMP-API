@@ -9,7 +9,7 @@ TMP_RobotServer::TMP_RobotServer(int port) : TMP_RobotServer("TMP-ESP32", port) 
 TMP_RobotServer::TMP_RobotServer(const char* hostname) : TMP_RobotServer(hostname, 80) {}
 
 TMP_RobotServer::TMP_RobotServer(const char* hostname, int port) 
-  : _server(port), _hostname(hostname) {}
+  : _hostname(hostname), _server(port) {}
 
 void TMP_RobotServer::begin()
 {
