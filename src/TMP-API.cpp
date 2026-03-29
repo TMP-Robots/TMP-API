@@ -13,8 +13,10 @@ TMP_RobotServer::TMP_RobotServer(const char* hostname, int port)
 
 void TMP_RobotServer::begin()
 {
-  _server.on("/", [this]() { _handleRoot(); });
-  _server.on("/health", [this]() { _handleHealth(); });
+  _server.on("/", HTTP_GET, [this]() { _handleGetRoot(); });
+  _server.on("/health", HTTP_GET, [this]() { _handleGetHealth(); });
+  _server.on("/config", HTTP_GET, [this]() { _handleGetConfig(); });
+  _server.on("/config", HTTP_POST, [this]() { _handlePostConfig(); });
   
   _server.onNotFound([this]() { _handleNotFound(); });
 
@@ -150,16 +152,51 @@ void TMP_RobotServer::_setup_OTA()
   ArduinoOTA.setHostname(_hostname);
 }
 
-void TMP_RobotServer::_handleRoot()
+void TMP_RobotServer::_handleGetRoot()
 {
   _server.send(200, "text/plain", "Hi");
   ESP_LOGD(TAG, "200 - Root accessed");
 }
 
-void TMP_RobotServer::_handleHealth()
+void TMP_RobotServer::_handleGetHealth()
 {
   _server.send(200, "application/json", "{\"status\":\"ok\"}");
   ESP_LOGD(TAG, "200 - Status accessed");
+}
+
+void TMP_RobotServer::_handleGetConfig() {
+  JsonDocument doc;
+
+  // Populate the JSON document with current config values using getters
+  for (auto const& [key, getter] : _getters) {
+    doc[key] = getter();
+  }
+  
+  String response;
+  serializeJson(doc, response);
+  _server.send(200, "application/json", response);
+
+  ESP_LOGD(TAG, "200 - Config accessed");
+}
+
+void TMP_RobotServer::_handlePostConfig() {
+  JsonDocument doc;
+  deserializeJson(doc, _server.arg("plain"));
+  
+  // Update config values using setters based on incoming JSON
+  for (JsonPair p : doc.as<JsonObject>()) {
+    String key = p.key().c_str();
+    if (_updaters.count(key)) {
+      _updaters[key](p.value().as<String>());
+    }
+  }
+  
+  // Send back the updated config as confirmation
+  String response;
+  serializeJson(doc, response);
+  _server.send(200, "application/json", response);
+
+  ESP_LOGD(TAG, "200 - Config updated");
 }
 
 void TMP_RobotServer::_handleNotFound()
