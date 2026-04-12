@@ -99,7 +99,7 @@ private:
   void _handleGetRoot();
   void _handleGetHealth();
   void _handleGetConfig();
-  void _handlePostConfig();
+  void _handlePutConfig();
   void _handleNotFound();
 };
 

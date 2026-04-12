@@ -16,7 +16,7 @@ void TMP_RobotServer::begin()
   _server.on("/", HTTP_GET, [this]() { _handleGetRoot(); });
   _server.on("/health", HTTP_GET, [this]() { _handleGetHealth(); });
   _server.on("/config", HTTP_GET, [this]() { _handleGetConfig(); });
-  _server.on("/config", HTTP_POST, [this]() { _handlePostConfig(); });
+  _server.on("/config", HTTP_PUT, [this]() { _handlePutConfig(); });
   
   _server.onNotFound([this]() { _handleNotFound(); });
 
@@ -179,7 +179,7 @@ void TMP_RobotServer::_handleGetConfig() {
   ESP_LOGD(TAG, "200 - Config accessed");
 }
 
-void TMP_RobotServer::_handlePostConfig() {
+void TMP_RobotServer::_handlePutConfig() {
   JsonDocument doc;
   deserializeJson(doc, _server.arg("plain"));
   
